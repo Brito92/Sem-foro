@@ -1,0 +1,229 @@
+// CÓDIGO SEMÁFORO ARDUINO
+
+int latchPin = A1;
+int clockPin = A2;
+int dataPin = A0;
+
+byte leds = 0;
+
+int red = 2;
+int yellow = 3;
+int green = 4;
+int red2 = 10;
+int yellow2 = 11;
+int green2 = 12;
+int red3 = 5;
+int yellow3 = 6;
+int green3 = 13;
+
+int sound = 7;
+int sound2 = A3;
+int button = 8;
+int button2 = 9;
+int button3 = A4;
+
+const byte PED_RED1 = 0b00000001;
+const byte PED_GREEN1 = 0b00000010;
+const byte PED_RED2 = 0b00000100;
+const byte PED_GREEN2 = 0b00001000;
+const byte PED_RED3 = 0b00010000;
+const byte PED_GREEN3 = 0b00100000;
+
+bool semaforo1Ativo = false;
+bool semaforo2Ativo = false;
+bool semaforo3Ativo = false;
+unsigned long tempoFinalSemaforo1 = 0;
+unsigned long tempoFinalSemaforo2 = 0;
+unsigned long tempoFinalSemaforo3 = 0;
+const unsigned long TEMPO_COOLDOWN = 10000;
+
+void setPedestrianLights(byte pattern) {
+  leds = pattern;
+  digitalWrite(latchPin, LOW);
+  shiftOut(dataPin, clockPin, MSBFIRST, leds);
+  digitalWrite(latchPin, HIGH);
+}
+
+void setup()
+{
+  pinMode(red, OUTPUT);
+  pinMode(yellow, OUTPUT);
+  pinMode(green, OUTPUT);
+  pinMode(red2, OUTPUT);
+  pinMode(yellow2, OUTPUT);
+  pinMode(green2, OUTPUT);
+  pinMode(red3, OUTPUT);
+  pinMode(yellow3, OUTPUT);
+  pinMode(green3, OUTPUT);
+  
+  pinMode(button, INPUT);
+  pinMode(button2, INPUT);
+  pinMode(button3, INPUT);
+  
+  pinMode(sound, OUTPUT);
+  pinMode(sound2, OUTPUT);
+  
+  pinMode(latchPin, OUTPUT);
+  pinMode(dataPin, OUTPUT);
+  pinMode(clockPin, OUTPUT);
+  
+  digitalWrite(green, HIGH);
+  digitalWrite(green2, HIGH);
+  digitalWrite(green3, HIGH);
+  setPedestrianLights(PED_RED1 | PED_RED2 | PED_RED3);
+}
+
+void loop()
+{
+  verificarBotaoSemaforo1();
+  verificarBotaoSemaforo2();
+  verificarBotaoSemaforo3();
+  
+  manterEstadoNormal();
+}
+
+void verificarBotaoSemaforo1() {
+  if (!semaforo1Ativo && (millis() - tempoFinalSemaforo1 > TEMPO_COOLDOWN)) {
+    if (digitalRead(button) == HIGH) {
+      semaforo1Ativo = true;
+      executarSemaforo1();
+    }
+  }
+}
+
+void verificarBotaoSemaforo2() {
+  if (!semaforo2Ativo && (millis() - tempoFinalSemaforo2 > TEMPO_COOLDOWN)) {
+    if (digitalRead(button2) == HIGH) {
+      semaforo2Ativo = true;
+      executarSemaforo2();
+    }
+  }
+}
+
+void verificarBotaoSemaforo3() {
+  if (!semaforo3Ativo && (millis() - tempoFinalSemaforo3 > TEMPO_COOLDOWN)) {
+    if (digitalRead(button3) == HIGH) {
+      semaforo3Ativo = true;
+      executarSemaforo3();
+    }
+  }
+}
+
+void executarSemaforo1() {
+  digitalWrite(green, LOW);
+  digitalWrite(yellow, HIGH);
+  delay(2000);
+  
+  digitalWrite(yellow, LOW);
+  digitalWrite(red, HIGH);
+  delay(2000);
+  
+  for (int y=0; y<5; y++) {
+    setPedestrianLights(PED_GREEN1 | PED_RED2 | PED_RED3);
+    tone(sound, 440, 500);
+    delay(1000);
+  }
+  
+  for (int x=0; x<3; x++) {
+    setPedestrianLights(PED_RED1 | PED_RED2 | PED_RED3);
+    tone(sound, 440, 200);
+    delay(200);
+    setPedestrianLights(PED_RED2 | PED_RED3);
+    delay(200);
+  }
+  
+  setPedestrianLights(PED_RED1 | PED_RED2 | PED_RED3);
+  delay(3000);
+  
+  digitalWrite(red, LOW);
+  digitalWrite(green, HIGH);
+  
+  semaforo1Ativo = false;
+  tempoFinalSemaforo1 = millis();
+}
+
+void executarSemaforo2() {
+  digitalWrite(green2, LOW);
+  digitalWrite(yellow2, HIGH);
+  delay(2000);
+  
+  digitalWrite(yellow2, LOW);
+  digitalWrite(red2, HIGH);
+  delay(2000);
+  
+  for (int y=0; y<5; y++) {
+    setPedestrianLights(PED_RED1 | PED_GREEN2 | PED_RED3);
+    tone(sound, 440, 500);
+    delay(1000);
+  }
+  
+  for (int x=0; x<3; x++) {
+    setPedestrianLights(PED_RED1 | PED_RED2 | PED_RED3);
+    tone(sound, 440, 200);
+    delay(200);
+    setPedestrianLights(PED_RED1 | PED_RED3);
+    delay(200);
+  }
+  
+  setPedestrianLights(PED_RED1 | PED_RED2 | PED_RED3);
+  delay(3000);
+  
+  digitalWrite(red2, LOW);
+  digitalWrite(green2, HIGH);
+  
+  semaforo2Ativo = false;
+  tempoFinalSemaforo2 = millis();
+}
+
+void executarSemaforo3() {
+  digitalWrite(green3, LOW);
+  digitalWrite(yellow3, HIGH);
+  delay(2000);
+  
+  digitalWrite(yellow3, LOW);
+  digitalWrite(red3, HIGH);
+  delay(2000);
+  
+  for (int y=0; y<5; y++) {
+    setPedestrianLights(PED_RED1 | PED_RED2 | PED_GREEN3);
+    tone(sound2, 440, 500);
+    delay(1000);
+  }
+  
+  for (int x=0; x<3; x++) {
+    setPedestrianLights(PED_RED1 | PED_RED2 | PED_RED3);
+    tone(sound2, 440, 200);
+    delay(200);
+    setPedestrianLights(PED_RED1 | PED_RED2);
+    delay(200);
+  }
+  
+  setPedestrianLights(PED_RED1 | PED_RED2 | PED_RED3);
+  delay(3000);
+  
+  digitalWrite(red3, LOW);
+  digitalWrite(green3, HIGH);
+  
+  semaforo3Ativo = false;
+  tempoFinalSemaforo3 = millis();
+}
+
+void manterEstadoNormal() {
+  if (!semaforo1Ativo) {
+    digitalWrite(green, HIGH);
+    digitalWrite(yellow, LOW);
+    digitalWrite(red, LOW);
+  }
+  
+  if (!semaforo2Ativo) {
+    digitalWrite(green2, HIGH);
+    digitalWrite(yellow2, LOW);
+    digitalWrite(red2, LOW);
+  }
+  
+  if (!semaforo3Ativo) {
+    digitalWrite(green3, HIGH);
+    digitalWrite(yellow3, LOW);
+    digitalWrite(red3, LOW);
+  }
+}
